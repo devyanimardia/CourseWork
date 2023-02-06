@@ -1,0 +1,113 @@
+---
+title: "mardia_dm1633_assignment2"
+output:
+  html_document:
+    df_print: paged
+date: "2023-02-04"
+---
+
+```{r}
+setwd("/Users/devyanimardia/Downloads/DataWrangling")
+
+if (!require("tidyverse")) install.packages("tidyverse")
+
+NYRestaurantInspection2023.tbl <- read_csv("NYRestaurantInspection2023.csv")
+NYRestaurantInspection2023.tbl <- as_tibble(NYRestaurantInspection2023.tbl)
+
+```
+1(a). Form a new data frame restricted to restaurants in Queens with cuisine equal to “Pizza”.
+```{r}
+
+queenspizzarest <- NYRestaurantInspection2023.tbl %>% filter(BORO == "Queens", `CUISINE DESCRIPTION` == "Pizza")
+```
+1(b). What are the 5 most frequently inspected restaurants (use the variable “DBA”) in the
+data frame?
+```{r}
+queenspizzarest['Inspected'] <- !is.null(queenspizzarest$`INSPECTION DATE`) 
+head(queenspizzarest)
+
+freqinsp <- queenspizzarest %>% group_by(DBA) %>% summarise(freqrest = sum(Inspected)) %>% arrange(desc(freqrest))
+
+head(freqinsp, 7)
+
+
+```
+
+```{r}
+#Sample of how we can manipulate the data if we are sure the names are duplicates in order to group the data better
+
+m <- queenspizzarest
+m["new_DBA"] <- str_remove(m$DBA, 'PIZZA$') 
+m["new_DBA"] <- gsub("'", "", m$new_DBA)
+m["new_DBA"] <- trimws(m$new_DBA)
+
+m['Inspected'] <- !is.null(m$`INSPECTION DATE`) 
+
+
+freqinspm <- m %>% group_by(new_DBA) %>% summarise(freqrest = sum(Inspected)) %>% arrange(desc(freqrest))
+
+head(freqinspm, 5)
+
+```
+
+
+(1c) On what dates has pizza parlor "SUSANO'S PIZZERIA & RESTAURANT" been inspected? 
+
+```{r}
+s <- queenspizzarest %>% filter(DBA == "SUSANO'S PIZZERIA & RESTAURANT") %>% select(DBA, `INSPECTION DATE`, `INSPECTION TYPE`, `VIOLATION DESCRIPTION`)
+s
+unique(s$`INSPECTION DATE`)
+```
+(2) The file "gapminder_2007_gini.tsv" is in the Files > Lecture materials > Week 2 materials folder. It is a subset of the 2007 Gapminder data merged with recent Gini coefficient data (https://en.wikipedia.org/wiki/Gini_coefficient) . 
+
+
+```{r}
+ginidata <- read.delim("/Users/devyanimardia/Downloads/gapminder_2007_gini.tsv",sep="\t")
+head(ginidata)
+```
+(2a) Create a plot to compare the distributions of the Gini coefficient in different continents. [Hint: Use a boxplot]
+
+
+```{r}
+ginidata %>% ggplot(aes(continent, gini, fill = continent)) + geom_boxplot(outlier.colour="black", outlier.shape=3, outlier.size=3) + xlab("Continent") + ylab("gini") + theme(legend.position = "top")
+
+```
+(2b) Does the Gini coefficient appear to have any impact on the life expectancy in 2007? Explain your answer using a plot, classified by continents.
+
+
+```{r}
+ginidata %>% filter(year == 2007) %>% ggplot(aes(lifeExp, gini, color = gini)) + geom_point()  + geom_smooth() + ggtitle("Life Expectancy vs Gini in 2007") + theme(plot.title = element_text(size = 15, hjust = 0.5))
+
+#OR , the first one shows a clearer relationship, lifeexp increases with decreasing gini
+
+ginidata %>% filter(year == 2007) %>% ggplot(aes(gini, lifeExp, color = gini)) + geom_point()  + geom_smooth()
+
+# a plot with a distinction with continents as well but doesn't seem to give a lot of insights
+
+ginidata %>% filter(year == 2007) %>% ggplot(aes(gini, lifeExp, color = continent)) + geom_point()
+
+```
+There is an impact of gini index on life expectancy , they appear to be inversely related
+
+
+(3) Using the original gapminder data frame, please generate a data frame with a new variable called gdp by multiplying the population size by the gdp per capita. To make those large numbers more understandable, please form an additional new variable called gdp_ratio equal to the gdp divided by the gdp of the United States in 2007.
+Find the median gdp_ratio by continent and year, and then plot the median gdp_ratio over time, distinguishing the continents. Please use both points and lines for the plot.
+
+```{r}
+library(gapminder)
+options(dplyr.summarise.inform = FALSE)
+
+gapminder_new <- gapminder %>% mutate(gdp = pop * gdpPercap)
+
+gdpus <- as.numeric(gapminder_new %>%  filter(country == "United States", year == 2007) %>% select(gdpPercap))
+
+gdpratiodata <- gapminder_new %>% mutate(gdp_ratio = gdp / gdpus)
+
+mediangapminderdata <- gdpratiodata %>% group_by(continent, year) %>% summarise(gdpratio_median=median(gdp_ratio)) %>% arrange(desc(year))
+
+head(mediangapminderdata)
+```
+```{r}
+mediangapminderdata %>% ggplot(aes(year, gdpratio_median, color = continent)) + geom_point() + geom_line() + xlab("Year") + ylab("Median GDP_Ratio") + ggtitle("Median Gdp Ratio over time") + theme(legend.position = "top")  + scale_colour_discrete(name = "Continents :") + theme(plot.title = element_text(size = 15, hjust = 0.5))
+```
+

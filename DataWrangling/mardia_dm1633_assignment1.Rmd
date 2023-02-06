@@ -1,0 +1,90 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+Install the package "babynames"
+Plot the number of male and female babies named Taylor *by year*
+
+```{r}
+if (!require("babynames")) install.packages("babynames")
+if (!require("tidyverse")) install.packages("tidyverse")
+
+library(babynames)
+
+babynames %>% filter(name == "Taylor") %>% arrange(year) %>% ggplot(aes(year, n, color = sex)) + geom_line() +
+  xlab("year") +
+  ylab("Frequency") +
+  ggtitle("Year wise Frequency for the name Taylor for Female & Male")
+
+
+```
+Answer the following questions, showing plots to substantiate your answers (except 4):
+
+1.Is a 23-year old named Quinn more likely to be a boy or a girl?
+Ans. The plot has taken into account the survey years where the last year shows 2017 but the babies born in 2017 would be 0 years so we need to consider 2018 instead to account for all 23 year old's named Quinn. Although I have made graphs for both 2017 & 2023. As per the graph the probability of having a Male Quinn is very likely for 23 year olds
+```{r}
+quinn_23yr2017 <- babynames %>% filter(name == "Quinn" & year == (2018-23)) %>% select(sex, n) %>% ggplot(aes(sex, n)) + geom_col(fill="green") +
+  xlab("sex") +
+  ylab("Frequency") +
+  ggtitle("Sex wise Frequency for the name Quinn at 23years old age.")
+quinn_23yr2017
+
+#with 2023 
+
+quinn_23yr2023 <- babynames %>% filter(name == "Quinn" & year == (2023-23)) %>% select(sex, n) %>% ggplot(aes(sex, n)) + geom_col(fill="blue") + 
+  xlab("sex") +
+  ylab("Frequency") +
+  ggtitle("Sex wise Frequency for the name Quinn at 23years old age.")
+quinn_23yr2023
+
+```
+
+
+Is a 6 year old named Quinn more likely to be a boy or a girl?
+Ans. The plot has taken into account the survey years where the last year shows 2017 but the babies born in 2017 would be 0 years so we need to consider 2018 instead to account for all 6 year old's named Quinn. Although I have made graphs for both 2017 & 2023. As per the graph the probability of having a Female Quinn is very likely for 6 year olds
+```{r}
+quinn_6yr2017 <- babynames %>% filter(name == "Quinn" & year == (2018-6)) %>% select(sex, n) %>% ggplot(aes(sex, n)) + geom_col(fill="purple") +
+  xlab("sex") +
+  ylab("Frequency") +
+  ggtitle("Sex wise Frequency for the name Quinn at 6years old age.")
+quinn_6yr2017
+
+#with 2023 as year 
+
+quinn_6yr2023 <- babynames %>% filter(name == "Quinn" & year == (2023-6)) %>% select(sex, n) %>% ggplot(aes(sex, n)) + geom_col(fill="yellow")  + 
+  xlab("sex") +
+  ylab("Frequency") +
+  ggtitle("Sex wise Frequency for the name Quinn at 6years old age.")
+quinn_6yr2023
+```
+
+
+What is your best guess as to how old a woman named Susan is?
+Ans. As per the dataframe and graph we can see that Susan is 63 years old if we consider 2017/18 as last year. If we consider 2023 year it will be 68 years old.
+```{r}
+susanage <- babynames %>% mutate(age = 2018-year)  %>% filter(name == "Susan" & sex == "F" & age <= 100) %>% arrange(year)
+
+susanage %>% ggplot(aes(age, n)) + geom_line() +
+  xlab("Age") +
+  ylab("Frequency") +
+  ggtitle("Finding Susan's age")
+susanage %>% arrange(desc(n))
+
+#with 2023 year
+
+susanage <- babynames %>% mutate(age = 2023-year)  %>% filter(name == "Susan" & sex == "F" & age <= 100) %>% arrange(year)
+
+susanage %>% ggplot(aes(age, n)) + geom_line() +
+  xlab("Age") +
+  ylab("Frequency") +
+  ggtitle("Finding Susan age")
+
+susanage %>% arrange(desc(n))
+```
+Find the five most popular female names in the year 2017.
+Ans.We can see that by simply arranging the data after applying filter we get the five most popular names as: Emma, Olivia, Ava, Isabella and Sophia
+```{r}
+female_popular <- babynames %>% filter(year == 2017 & sex == "F") %>% arrange(desc(n))
+head(female_popular, 5)
+```
